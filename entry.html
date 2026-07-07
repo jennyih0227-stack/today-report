@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>今日報報 ｜ 入口</title>
+<style>
+  :root{--navy:#1B2A4A;--navy2:#2E4A7A;--gold:#C9A84C;--gold-d:#A07830;--cream:#FAF6EE;--card:#FCF3CF;--line:#E6D9A8}
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  body{font-family:"PingFang TC","Microsoft JhengHei","Noto Sans CJK TC",sans-serif;background:var(--cream);min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+  .card{width:100%;max-width:400px;background:#fff;border-radius:22px;overflow:hidden;box-shadow:0 10px 40px rgba(27,42,74,.18)}
+  .hd{background:linear-gradient(135deg,var(--navy),var(--navy2));padding:26px 22px;text-align:center;border-bottom:5px solid var(--gold)}
+  .hd .t{font-size:32px;font-weight:900;color:#fff;letter-spacing:2px}
+  .hd .s{font-size:15px;color:var(--gold);font-weight:700;margin-top:6px}
+  .body{padding:24px 22px 26px;text-align:center}
+  .qrbox{background:#fff;border:2px solid var(--line);border-radius:16px;padding:14px;display:inline-block;margin-bottom:18px}
+  .qrbox img{width:210px;height:210px;display:block}
+  .qrcap{font-size:13px;color:#888;margin-bottom:20px}
+  .open-btn{display:block;width:100%;background:var(--gold);color:var(--navy);text-decoration:none;font-size:20px;font-weight:900;padding:16px;border-radius:14px;margin-bottom:14px;transition:.15s}
+  .open-btn:active{background:var(--gold-d);color:#fff}
+  .line-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;background:#06C755;color:#fff;border:none;text-decoration:none;font-size:19px;font-weight:900;padding:15px;border-radius:14px;margin-bottom:14px;font-family:inherit;cursor:pointer;transition:.15s}
+  .line-btn:active{background:#05a648}
+  .line-btn .ico{width:24px;height:24px;flex:none}
+  .url-row{background:var(--navy);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .url-row a{flex:1;color:var(--gold);font-size:13px;text-decoration:none;word-break:break-all;text-align:left;font-weight:700}
+  .copy-btn{flex:none;background:var(--gold);color:var(--navy);border:none;border-radius:8px;padding:8px 12px;font-family:inherit;font-weight:900;font-size:13px;cursor:pointer}
+  .copy-btn:active{background:#fff}
+  .hint{font-size:12px;color:#999;line-height:1.6;margin-top:12px}
+  .ft{background:var(--navy);padding:12px;display:flex;align-items:center;justify-content:center;gap:8px;border-top:4px solid var(--gold)}
+  .ft .seal{width:30px;height:30px;border-radius:50%;background:var(--navy);border:2px solid var(--gold);display:flex;align-items:center;justify-content:center}
+  .ft .seal b{font-size:12px;color:var(--gold);letter-spacing:-1px}
+  .ft span{font-size:14px;color:#fff;font-weight:700}
+  .toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);background:var(--navy);color:#fff;padding:10px 22px;border-radius:20px;font-size:14px;font-weight:700;opacity:0;transition:.3s;pointer-events:none}
+  .toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="hd">
+    <div class="t">今日報報</div>
+    <div class="s">每日匯率・黃金・台股　一鍵掌握</div>
+  </div>
+  <div class="body">
+    <div class="qrbox"><img src="data:image/png;base64,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" alt="QR Code"></div>
+    <div class="qrcap">手機掃描 QR Code，或點下方按鈕</div>
+
+    <a class="open-btn" href="https://jennyih0227-stack.github.io/today-report/" target="_blank" rel="noopener">立即開啟工具 ›</a>
+
+    <button class="line-btn" onclick="shareToLine()">
+      <svg class="ico" viewBox="0 0 24 24" fill="#fff"><path d="M12 2C6.48 2 2 5.64 2 10.13c0 4.02 3.55 7.39 8.35 8.03.32.07.77.21.88.49.1.25.06.64.03.9l-.14.85c-.04.25-.2.98.86.53s5.7-3.36 7.78-5.75C21.3 13.5 22 11.9 22 10.13 22 5.64 17.52 2 12 2ZM7.5 12.9H5.6c-.28 0-.5-.22-.5-.5V8.6c0-.28.22-.5.5-.5s.5.22.5.5v3.3h1.4c.28 0 .5.22.5.5s-.22.5-.5.5Zm2-.5c0 .28-.22.5-.5.5s-.5-.22-.5-.5V8.6c0-.28.22-.5.5-.5s.5.22.5.5v3.8Zm4.6 0c0 .22-.14.41-.35.48-.05.02-.1.02-.15.02-.16 0-.31-.08-.4-.21l-1.95-2.65v2.36c0 .28-.22.5-.5.5s-.5-.22-.5-.5V8.6c0-.22.14-.41.35-.48.05-.01.1-.02.15-.02.15 0 .3.08.4.21l1.95 2.65V8.6c0-.28.22-.5.5-.5s.5.22.5.5v3.8Zm3.2-2.4c.28 0 .5.22.5.5s-.22.5-.5.5h-1.4v.9h1.4c.28 0 .5.22.5.5s-.22.5-.5.5h-1.9c-.28 0-.5-.22-.5-.5V8.6c0-.28.22-.5.5-.5h1.9c.28 0 .5.22.5.5s-.22.5-.5.5h-1.4v.9h1.4Z"/></svg>
+      分享到 LINE
+    </button>
+
+    <div class="url-row">
+      <a id="url" href="https://jennyih0227-stack.github.io/today-report/" target="_blank" rel="noopener">jennyih0227-stack.github.io/today-report/</a>
+      <button class="copy-btn" onclick="copyUrl()">複製</button>
+    </div>
+    <div class="hint">在 LINE 開啟時，建議點右上「⋯」→ 用瀏覽器開啟</div>
+  </div>
+  <div class="ft">
+    <div class="seal"><b>躍勇</b></div>
+    <span>熊誠毅 ｜ 躍勇數位組</span>
+  </div>
+</div>
+<div class="toast" id="toast">已複製網址</div>
+<script>
+const SHARE_URL='https://jennyih0227-stack.github.io/today-report/';
+const SHARE_MSG='今日報報 每日財經匯整（匯率・黃金・台股）▶ '+SHARE_URL;
+async function shareToLine(){
+  // 手機原生分享選單（可選 LINE、其他 App）
+  if(navigator.share){
+    try{ await navigator.share({title:'今日報報',text:'今日報報 每日財經匯整',url:SHARE_URL}); return; }
+    catch(e){ if(e&&e.name==='AbortError') return; }
+  }
+  // 退回：直接開 LINE 分享
+  window.open('https://line.me/R/msg/text/?'+encodeURIComponent(SHARE_MSG),'_blank');
+}
+function copyUrl(){
+  const url='https://jennyih0227-stack.github.io/today-report/';
+  const done=()=>{const t=document.getElementById('toast');t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1600);};
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(done).catch(()=>fallback(url,done));
+  }else fallback(url,done);
+}
+function fallback(url,done){
+  const ta=document.createElement('textarea');ta.value=url;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();try{document.execCommand('copy');done();}catch(e){}ta.remove();
+}
+</script>
+</body>
+</html>
