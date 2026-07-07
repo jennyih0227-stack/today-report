@@ -52,6 +52,17 @@
   .ft .s b{font-size:clamp(10px,2.8vw,12px);color:var(--gold);letter-spacing:-1px}
   .ft .n{font-size:clamp(10px,2.8vw,13px);font-weight:700;color:#555}
   .tm{text-align:right;font-size:clamp(10px,2.8vw,13px);color:#5a6275;margin:5px 10px 0;font-weight:700}
+  /* LINE/FB 內建瀏覽器提示橫幅 */
+  .ib-banner{width:100%;max-width:420px;background:#FFF3CD;border:1px solid #E6C34A;border-radius:10px;padding:9px 12px;margin-bottom:6px;font-size:12px;color:#7a5a00;font-weight:700;line-height:1.5;display:none}
+  .ib-banner.show{display:block}
+  .ib-banner b{color:#B36B00}
+  /* 長按存圖預覽層 */
+  .saveLayer{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:60;display:none;flex-direction:column;align-items:center;justify-content:center;padding:18px}
+  .saveLayer.open{display:flex}
+  .saveLayer .tipbar{color:#fff;font-size:15px;font-weight:800;text-align:center;margin-bottom:12px;line-height:1.6}
+  .saveLayer .tipbar span{color:#FFD86B}
+  .saveLayer img{max-width:100%;max-height:74vh;border-radius:12px;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+  .saveLayer .closeBtn{margin-top:16px;background:#fff;color:#1B2A4A;border:none;border-radius:10px;padding:11px 30px;font-family:inherit;font-weight:900;font-size:15px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -70,6 +81,10 @@
 </div>
 
 <div class="st" id="st">載入中…</div>
+
+<div class="ib-banner" id="ibBanner">
+  📱 你正在 <b>LINE 內建瀏覽器</b>，下載鈕可能無效。建議點右上角 <b>「⋯」→ 用預設瀏覽器開啟</b>；或直接按下載，會跳出圖片讓你<b>長按儲存</b>。
+</div>
 
 <div class="edit" id="ed">
   <div class="eg">
@@ -105,6 +120,12 @@
     <div class="ft"><div class="s"><b>躍勇</b></div><div class="n" id="d_note">淨值彙整以工作日早上 9:00 為參考</div></div>
   </div>
   <div class="tm" id="d_time">上午 8:00</div>
+</div>
+
+<div class="saveLayer" id="saveLayer">
+  <div class="tipbar"><span>長按下方圖片</span> → 選「儲存影像 / 加入照片」</div>
+  <img id="saveImg" src="" alt="今日報報">
+  <button class="closeBtn" onclick="document.getElementById('saveLayer').classList.remove('open')">關閉</button>
 </div>
 
 <script>
@@ -163,8 +184,31 @@ function render(){
   for(const i of document.querySelectorAll('.eg input')){const k=i.dataset.k;if(state[k]!=='')i.value=state[k]}
 }
 function applyEdits(){for(const i of document.querySelectorAll('.eg input')){const k=i.dataset.k,v=i.value.trim();if(!v)continue;state[k]=v;k==='date'?document.getElementById('d_date').textContent=v:document.getElementById('v_'+k).textContent=v}ss('已套用','ok');document.getElementById('ed').classList.remove('open')}
-async function dlPng(){const b=document.getElementById('dl');b.disabled=true;ss('產生圖片中…');try{const c=await html2canvas(document.getElementById('cap'),{scale:3,backgroundColor:'#aebfd4'});const url=c.toDataURL('image/png');const a=document.createElement('a');a.download='今日報報_'+(state.date||'今日').replace(/ /g,'')+'.png';a.href=url;document.body.appendChild(a);a.click();a.remove();ss('✅ 已下載；若無反應請長按圖卡存圖','ok')}catch(e){ss('下載失敗，請改用長按圖卡存圖','err')}b.disabled=false}
-window.addEventListener('load',()=>{const t=today();document.getElementById('d_date').textContent=t.date;document.getElementById('d_time').textContent=t.time;document.getElementById('d_note').textContent='淨值彙整以工作日 '+t.time+' 為參考';loadAll()});
+/* 偵測 LINE / FB / IG 等內建瀏覽器 */
+function isInApp(){
+  const ua=navigator.userAgent||'';
+  return /Line|FBAN|FBAV|FB_IAB|Instagram|MicroMessenger/i.test(ua);
+}
+async function dlPng(){
+  const b=document.getElementById('dl');b.disabled=true;ss('產生圖片中…');
+  try{
+    const c=await html2canvas(document.getElementById('cap'),{scale:3,backgroundColor:'#aebfd4'});
+    const url=c.toDataURL('image/png');
+    if(isInApp()){
+      // LINE/FB 內建瀏覽器：跳出圖片讓使用者長按儲存
+      document.getElementById('saveImg').src=url;
+      document.getElementById('saveLayer').classList.add('open');
+      ss('請長按圖片選「儲存影像」','ok');
+    }else{
+      const a=document.createElement('a');
+      a.download='今日報報_'+(state.date||'今日').replace(/ /g,'')+'.png';
+      a.href=url;document.body.appendChild(a);a.click();a.remove();
+      ss('✅ 已下載；若無反應請長按圖卡存圖','ok');
+    }
+  }catch(e){ss('下載失敗，請改用長按圖卡存圖','err');}
+  b.disabled=false;
+}
+window.addEventListener('load',()=>{const t=today();document.getElementById('d_date').textContent=t.date;document.getElementById('d_time').textContent=t.time;document.getElementById('d_note').textContent='淨值彙整以工作日 '+t.time+' 為參考';if(isInApp())document.getElementById('ibBanner').classList.add('show');loadAll()});
 </script>
 </body>
 </html>
