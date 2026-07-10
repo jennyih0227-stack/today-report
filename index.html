@@ -98,7 +98,7 @@
     <label>歐元<input id="e_eur" data-k="eur"></label>
     <label>澳幣<input id="e_aud" data-k="aud"></label>
     <label>人民幣<input id="e_cny" data-k="cny"></label>
-    <label>黃金價<input id="e_gold" data-k="gold"></label>
+    <label>黃金(美元/盎司)<input id="e_gold" data-k="gold"></label>
     <label>台股<input id="e_twii" data-k="twii"></label>
     <label>日期<input id="e_date" data-k="date" placeholder="2026 06 26"></label>
     <button class="apply" onclick="applyEdits()">套用</button>
@@ -120,7 +120,7 @@
     <div class="r"><div class="ic">&#127466;&#127482;</div><div class="l">歐元</div><div class="v" id="v_eur">--</div></div>
     <div class="r"><div class="ic">&#127462;&#127482;</div><div class="l">澳幣</div><div class="v" id="v_aud">--</div></div>
     <div class="r"><div class="ic">&#127464;&#127475;</div><div class="l">人民幣</div><div class="v" id="v_cny">--</div></div>
-    <div class="r"><div class="ic"><span class="gb"><b>GOLD</b><i>999&#9733;&#9733;&#9733;</i></span></div><div class="l">黃金價</div><div class="v" id="v_gold">--</div></div>
+    <div class="r"><div class="ic"><span class="gb"><b>GOLD</b><i>999&#9733;&#9733;&#9733;</i></span></div><div class="l">黃金(美元/盎司)</div><div class="v" id="v_gold">--</div></div>
     <div class="r"><div class="ic">&#128200;</div><div class="l">台股指數</div><div class="v" id="v_twii">--</div></div>
     <div class="ft"><div class="s"><b>躍勇</b></div><div class="n" id="d_note">淨值彙整以工作日早上 9:00 為參考</div></div>
   </div>
@@ -168,14 +168,30 @@ function setQuote(txt){state.quote=txt;const el=document.getElementById('d_quote
 function onQuoteSelect(){const v=document.getElementById('qsel').value;if(v){document.getElementById('qcustom').value='';setQuote(v)}else if(!document.getElementById('qcustom').value)setQuote('')}
 function onQuoteInput(){const v=document.getElementById('qcustom').value;if(v){document.getElementById('qsel').value='';setQuote(v)}else setQuote('')}
 
-async function rates(){const r=await fetch('https://open.er-api.com/v6/latest/TWD');const j=await r.json();if(j.result!=='success')throw 0;const t=j.rates;return{usd:1/t.USD,jpy:1/t.JPY,eur:1/t.EUR,aud:1/t.AUD,cny:1/t.CNY,u:1/t.USD}}
-async function gold(u){try{const r=await fetch('https://api.gold-api.com/price/XAU');const j=await r.json();return j.price/31.1035*37.5*u}catch(e){return null}}
+async function ratesFallback(){const r=await fetch('https://open.er-api.com/v6/latest/TWD');const j=await r.json();if(j.result!=='success')throw 0;const t=j.rates;return{usd:1/t.USD,jpy:1/t.JPY,eur:1/t.EUR,aud:1/t.AUD,cny:1/t.CNY,u:1/t.USD}}
+async function rates(){
+  // 美元匯率優先採用「台灣銀行」現金賣出價（由 GitHub Actions 定時更新），其餘幣別仍取自即時匯率 API
+  try{
+    const rb=await fetch('data/rates.json?_t='+Date.now());
+    const jb=await rb.json();
+    const usd=Number(jb && jb.usd_twd);
+    if(!isFinite(usd)||usd<=0)throw 0;
+    const r2=await fetch('https://open.er-api.com/v6/latest/TWD');
+    const j2=await r2.json();
+    if(j2.result!=='success')throw 0;
+    const t=j2.rates;
+    return{usd:usd,jpy:1/t.JPY,eur:1/t.EUR,aud:1/t.AUD,cny:1/t.CNY,u:usd};
+  }catch(e){
+    return await ratesFallback();
+  }
+}
+async function gold(){try{const r=await fetch('https://api.gold-api.com/price/XAU');const j=await r.json();return Number(j.price)}catch(e){return null}}
 async function twii(){try{const r=await fetch('data/twii.json?_t='+Date.now());const j=await r.json();if(j&&j.twii!=null)return Number(j.twii)}catch(e){}try{const ym=new Date().toISOString().slice(0,10).replace(/-/g,'');const r=await fetch('https://www.twse.com.tw/indicesReport/MI_5MINS_HIST?response=json&date='+ym);const j=await r.json();if(j.data&&j.data.length)return Number(String(j.data[j.data.length-1][4]).replace(/,/g,''))}catch(e){}return null}
 
 async function loadAll(){
   const b=document.getElementById('rf');b.disabled=true;ss('讀取中…');
   const t=today();state.date=t.date;state.time=t.time;let f=[];
-  try{const r=await rates();state.usd=nf(r.usd,3);state.jpy=nf(r.jpy,4);state.eur=nf(r.eur,3);state.aud=nf(r.aud,3);state.cny=nf(r.cny,3);const g=await gold(r.u);g?state.gold=nf(g,1):f.push('黃金')}catch(e){f.push('匯率')}
+  try{const r=await rates();state.usd=nf(r.usd,3);state.jpy=nf(r.jpy,4);state.eur=nf(r.eur,3);state.aud=nf(r.aud,3);state.cny=nf(r.cny,3);const g=await gold();g?state.gold=nf(g,2):f.push('黃金')}catch(e){f.push('匯率')}
   try{const x=await twii();x?state.twii=x.toLocaleString('en-US'):f.push('台股')}catch(e){f.push('台股')}
   render();b.disabled=false;
   f.length?ss('⚠️ '+f.join('、')+' 抓取失敗，請按鉛筆手動填','err'):ss('✅ 已更新 '+state.time,'ok');
